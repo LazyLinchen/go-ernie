@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("NewClient error: %v\n", err)
 		return
-    }
+    	}
 	resp, err := client.CreateChatCompletion(context.Background(), goernie.ChatCompletionRequest{
 		Model: goernie.ErnieBot,
 		Messages: []goernie.ChatCompletionMessage{
