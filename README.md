@@ -27,19 +27,20 @@ import (
 )
 
 func main() {
-	client := goernie.NewClient("ak", "sk")
-	resp, err := client.CreateChatCompletion(
-		context.Background(),
-		goernir.ChatCompletionRequest{
-			Model: goernie.ErnieBot,
-			Messages: []goernie.ChatCompletionMessage{
-				{
-					Role:    goernie.ChatMessageRoleUser,
-					Content: "你好!",
-				},
+	client, err := goernie.NewClient("ak", "sk")
+	if err != nil {
+		fmt.Printf("NewClient error: %v\n", err)
+		return
+    }
+	resp, err := client.CreateChatCompletion(context.Background(), goernie.ChatCompletionRequest{
+		Model: goernie.ErnieBot,
+		Messages: []goernie.ChatCompletionMessage{
+			{
+				Role:    goernie.ChatMessageRoleUser,
+				Content: "你好!",
 			},
 		},
-	)
+	})
 
 	if err != nil {
 		fmt.Printf("ChatCompletion error: %v\n", err)
@@ -68,9 +69,14 @@ import (
 )
 
 func main() {
-	stream, err := client.CreateChatCompletion(
+	client, err := goernie.NewClient("ak", "sk")
+	if err != nil {
+		fmt.Printf("NewClient error: %v\n", err)
+		return
+	}
+	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
-		goernir.ChatCompletionRequest{
+		goernie.ChatCompletionRequest{
 			Model: goernie.ErnieBot,
 			Messages: []goernie.ChatCompletionMessage{
 				{
@@ -122,9 +128,14 @@ import (
 )
 
 func main() {
-	stream, err := client.CreateChatCompletion(
+	client, err := goernie.NewClient("ak", "sk")
+	if err != nil {
+		fmt.Printf("NewClient error: %v\n", err)
+		return
+	}
+	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
-		goernir.ChatCompletionRequest{
+		goernie.ChatCompletionRequest{
 			Model: goernie.ErnieBotTurBo,
 			Messages: []goernie.ChatCompletionMessage{
 				{
@@ -174,10 +185,14 @@ import (
 )
 
 func main() {
-	client := goernie.NewClient("ak", "sk")
+	client, err := goernie.NewClient("ak", "sk")
+	if err != nil {
+		fmt.Printf("NewClient error: %v\n", err)
+		return
+	}
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
-		goernir.ChatCompletionRequest{
+		goernie.ChatCompletionRequest{
 			Model: goernie.ErnieBotTurBo,
 			Messages: []goernie.ChatCompletionMessage{
 				{
@@ -213,9 +228,14 @@ import (
 )
 
 func main() {
-	stream, err := client.CreateChatCompletion(
+	client, err := goernie.NewClient("ak", "sk")
+	if err != nil {
+		fmt.Printf("NewClient error: %v\n", err)
+		return
+	}
+	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
-		goernir.ChatCompletionRequest{
+		goernie.ChatCompletionRequest{
 			Model: goernie.BLOOMZ7B,
 			Messages: []goernie.ChatCompletionMessage{
 				{
@@ -265,10 +285,14 @@ import (
 )
 
 func main() {
-	client := goernie.NewClient("ak", "sk")
+	client, err := goernie.NewClient("ak", "sk")
+	if err != nil {
+		fmt.Printf("NewClient error: %v\n", err)
+		return
+	}
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
-		goernir.ChatCompletionRequest{
+		goernie.ChatCompletionRequest{
 			Model: goernie.BLOOMZ7B,
 			Messages: []goernie.ChatCompletionMessage{
 				{
