@@ -13,6 +13,7 @@ go get github.com/LazyLinchen/go-ernie
 ```
 go-ernie requires Go version 1.20 or greater.
 
+
 ## Usage
 
 ### Ernie-Bot example usage:
