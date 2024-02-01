@@ -33,4 +33,5 @@ func DefaultConfig(ak, sk string) ClientConfig {
 
 func (ClientConfig) String() string {
 	return "<Ernie API ClientConfig>"
+	
 }
