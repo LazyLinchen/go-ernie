@@ -4,6 +4,7 @@ const (
 	ErnieBot      = "erniebot"
 	ErnieBotTurBo = "erniebot-turbo"
 	BLOOMZ7B      = "BLOOMZ-7B"
+	
 )
 
 var enableChatCompletionModels = map[string]string{
