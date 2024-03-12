@@ -16,7 +16,6 @@ type ClientConfig struct {
 	AiApiURL           string
 	APIVersion         string
 	EmptyMessagesLimit uint
-
 	HTTPClient *http.Client
 }
 
