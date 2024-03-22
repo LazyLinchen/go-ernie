@@ -4,6 +4,7 @@ import "encoding/json"
 
 type Marshaller interface {
 	Marshal(value any) ([]byte, error)
+	
 }
 
 type JSONMarshaller struct{}
