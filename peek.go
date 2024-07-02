@@ -21,6 +21,7 @@ func newPeekingReader(r io.Reader, peekSize int) (*peekingReader, error) {
 		r:       r,
 		buf:     buf[:n],
 		readIdx: 0,
+		
 	}, nil
 }
 

@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrTestErrorAccumulatorWriteFailed = errors.New("test error accumulator failed")
+	
 )
 
 type FailingErrorBuffer struct{}

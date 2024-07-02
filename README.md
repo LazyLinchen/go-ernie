@@ -1,5 +1,6 @@
 # Go Ernie
 
+
 This library provides unofficial Go clients for [Ernie API](https://ctssmartprogram.baidu.com/doc/pages/hotRecommend/detail?id=12927). We support:
 
 * Ernie-Bot
@@ -32,7 +33,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("NewClient error: %v\n", err)
 		return
-    }
+    	}
 	resp, err := client.CreateChatCompletion(context.Background(), goernie.ChatCompletionRequest{
 		Model: goernie.ErnieBot,
 		Messages: []goernie.ChatCompletionMessage{
