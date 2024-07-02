@@ -79,7 +79,7 @@ func main() {
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		goernie.ChatCompletionRequest{
-			Model: goernie.ErnieBot,
+			Model: goernie.ERNIE_4,
 			Messages: []goernie.ChatCompletionMessage{
 				{
 					Role:    goernie.ChatMessageRoleUser,
