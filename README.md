@@ -60,6 +60,7 @@ func main() {
 <summary>Ernie-Bot streaming completion</summary>
 
 ```go
+
 package main
 
 import (
