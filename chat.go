@@ -21,6 +21,13 @@ type ChatCompletionMessage struct {
 	Content string `json:"content"`
 }
 
+type ResponseFormat string
+
+var (
+	ResponseFormatDefault ResponseFormat = "text"
+	ResponseFormatJSON    ResponseFormat = "json"
+)
+
 type ChatCompletionRequest struct {
 	Model        string                  `json:"model"`
 	Messages     []ChatCompletionMessage `json:"messages"`
@@ -29,6 +36,7 @@ type ChatCompletionRequest struct {
 	TopP         float32                 `json:"top_p,omitempty"`
 	PenaltyScore float32                 `json:"penalty_score,omitempty"`
 	UserId       string                  `json:"user_id,omitempty"`
+	ResponseFormat ResponseFormat          `json:"response_format,omitempty"`
 }
 
 type Usage struct {
