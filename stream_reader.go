@@ -42,7 +42,6 @@ func (stream *streamReader[T]) processLines() (T, error) {
 		for {
 			if !stream.scanner.Scan() {
 				stream.isFinished = true
-				stream.Close()
 				return *new(T), stream.scanner.Err()
 			}
 			line := stream.scanner.Bytes()
