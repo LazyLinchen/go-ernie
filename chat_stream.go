@@ -11,16 +11,7 @@ type ChatCompletionStreamChoice struct {
 }
 
 type ChatCompletionStreamResponse struct {
-	ID               string `json:"id"`
-	Object           string `json:"object"`
-	Created          int64  `json:"created"`
-	SentenceId       int64  `json:"sentence_id"`
-	IsEnd            bool   `json:"is_end"`
-	Result           string `json:"result"`
-	NeedClearHistory bool   `json:"need_clear_history"`
-	Usage            Usage  `json:"usage"`
-	ErrorMsg         string `json:"error_msg"`
-	ErrorCode        string `json:"error_code"`
+	ChatCompletionResponse
 }
 
 type ChatCompletionStream struct {
@@ -37,8 +28,13 @@ func (c *Client) CreateChatCompletionStream(
 	}
 	urlSuffix := chatCompletionUri(request.Model)
 
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("Content-Type", "application/json; charset=utf-8")
+	headers.Set("Cache-Control", "no-cache")
+
 	request.Stream = true
-	req, err := c.newRequest(ctx, http.MethodPost, c.fullURL(urlSuffix), withBody(request))
+	req, err := c.newRequest(ctx, http.MethodPost, c.fullURL(urlSuffix), withBody(request), withHeader(headers))
 	if err != nil {
 		return nil, err
 	}

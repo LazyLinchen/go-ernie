@@ -4,7 +4,7 @@ import "net/http"
 
 const (
 	ernieAPIURL   = "https://aip.baidubce.com"
-	ernieAPIURIv1 = "/rpc/2.0/ai_custom/v1"
+	ernieAPIURIv1 = "/rpc/2.0/ai_custom/v1/wenxinworkshop"
 
 	defaultEmptyMessagesLimit uint = 300
 )
@@ -16,7 +16,7 @@ type ClientConfig struct {
 	AiApiURL           string
 	APIVersion         string
 	EmptyMessagesLimit uint
-	HTTPClient *http.Client
+	HTTPClient         *http.Client
 }
 
 func DefaultConfig(ak, sk string) ClientConfig {

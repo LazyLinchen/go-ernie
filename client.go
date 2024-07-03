@@ -1,16 +1,16 @@
 package go_ernie
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	erinie "github.com/LazyLinchen/go-ernie/internal"
 	"github.com/pkg/errors"
 	"io"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var client = map[string]*Client{}
@@ -37,14 +37,25 @@ func NewClientWithConfig(config ClientConfig) (*Client, error) {
 		config:         config,
 		requestBuilder: erinie.NewRequestBuilder(),
 	}
-	// set access token
-	// TODO 不应该在这里直接设置，而是需要在后台配置并且定时刷新，并且集群共用token
 	err := c.setAccessToken()
 	if err != nil {
 		return nil, errors.New("setAccessToken error: " + err.Error())
 	}
+	refreshAccessToken(c)
 	client[config.AK] = c
 	return client[config.AK], nil
+}
+
+func refreshAccessToken(c *Client) {
+	go func() {
+		for {
+			time.Sleep(118 * time.Minute)
+			err := c.setAccessToken()
+			if err != nil {
+				log.Println("refreshAccessToken error: " + err.Error())
+			}
+		}
+	}()
 }
 
 func (c *Client) GetAccessToken() string {
@@ -84,6 +95,12 @@ type requestOption func(*requestOptions)
 func withBody(body any) requestOption {
 	return func(args *requestOptions) {
 		args.body = body
+	}
+}
+
+func withHeader(header http.Header) requestOption {
+	return func(args *requestOptions) {
+		args.header = header
 	}
 }
 
@@ -162,51 +179,24 @@ func (c *Client) handleErrorResp(res *http.Response) error {
 }
 
 func sendRequestStream[T streamable](client *Client, req *http.Request) (*streamReader[T], error) {
-	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Connection", "keep-alive")
-
-	resp, err := client.config.HTTPClient.Do(req)
-	if err != nil {
-		return new(streamReader[T]), err
-	}
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusBadRequest {
-		return new(streamReader[T]), client.handleErrorResp(resp)
-	}
-
-	// 百度的傻逼接口，报错不直接返回 400，而是返回 200，然后返回一个 json，里面有 error 字段，非SSE格式
-	// 需要取出来前面6个byte做判断是不是SSE，如果不是SSE那就是报错了，直接返回报错内容
-	pr, err := newPeekingReader(resp.Body, 6)
-	if err != nil {
-		return new(streamReader[T]), err
-	}
-	buf := make([]byte, 6)
-	pr.Read(buf)
-
-	// SSE response starts with "data: "
-	// 取出来之后还得还回去，不然就不是完整的请求体了，后面的流读取会有问题
-	resp.Body = io.NopCloser(io.MultiReader(bytes.NewReader(buf), resp.Body))
-
-	// 如果不是 SSE 格式，那就是报错了，直接给报错内容返回
-	if !bytes.HasPrefix(buf, []byte("data: ")) {
-		var respError APIError
-		b, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return new(streamReader[T]), errors.New("Unexpected SSE response" + err.Error())
-		}
-		err = json.Unmarshal(b, &respError)
-		if err != nil {
-			return new(streamReader[T]), errors.New("Unexpected SSE response" + err.Error())
-		}
-		return new(streamReader[T]), &respError
-	}
-
-	return &streamReader[T]{
+	stream := &streamReader[T]{
 		emptyMessagesLimit: client.config.EmptyMessagesLimit,
-		reader:             bufio.NewReader(resp.Body),
-		response:           resp,
+		isFinished:         false,
+		response:           nil,
+		scanner:            nil,
 		errAccumulator:     erinie.NewErrorAccumulator(),
 		unmarshaler:        &erinie.JSONUnmarshaler{},
-	}, nil
+	}
+	resp, err := client.config.HTTPClient.Do(req)
+	if err != nil {
+		stream.isFinished = true
+		return stream, err
+	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusBadRequest {
+		stream.isFinished = true
+		err = client.handleErrorResp(resp)
+		return stream, err
+	}
+	stream.response = resp
+	return stream, nil
 }

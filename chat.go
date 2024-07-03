@@ -16,9 +16,17 @@ var (
 	ErrChatCompletionStreamNotSupported = errors.New("streaming is not supported with this method, please use CreateChatCompletionStream")              //nolint:lll
 )
 
+type FunctionCall struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+	Thoughts  string `json:"thoughts,omitempty"`
+}
+
 type ChatCompletionMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role         string        `json:"role"`
+	Content      string        `json:"content"`
+	Name         string        `json:"name"`
+	FunctionCall *FunctionCall `json:"function_call,omitempty"`
 }
 
 type ResponseFormat string
@@ -29,14 +37,17 @@ var (
 )
 
 type ChatCompletionRequest struct {
-	Model        string                  `json:"model"`
-	Messages     []ChatCompletionMessage `json:"messages"`
-	Stream       bool                    `json:"stream,omitempty"`
-	Temperature  float32                 `json:"temperature,omitempty"`
-	TopP         float32                 `json:"top_p,omitempty"`
-	PenaltyScore float32                 `json:"penalty_score,omitempty"`
-	UserId       string                  `json:"user_id,omitempty"`
+	Model          string                  `json:"model"`
+	Messages       []ChatCompletionMessage `json:"messages"`
+	Stream         bool                    `json:"stream,omitempty"`
+	Temperature    float32                 `json:"temperature,omitempty"`
+	TopP           float32                 `json:"top_p,omitempty"`
+	PenaltyScore   float32                 `json:"penalty_score,omitempty"`
+	UserId         string                  `json:"user_id,omitempty"`
 	ResponseFormat ResponseFormat          `json:"response_format,omitempty"`
+	DisableSearch  bool                    `json:"disable_search,omitempty"`
+	EnableCitation bool                    `json:"enable_citation,omitempty"`
+	System         string                  `json:"system,omitempty"`
 }
 
 type Usage struct {
@@ -46,14 +57,23 @@ type Usage struct {
 }
 
 type ChatCompletionResponse struct {
-	ID               string `json:"id"`
-	Object           string `json:"object"`
-	Created          int64  `json:"created"`
-	SentenceId       int64  `json:"sentence_id"`
-	IsEnd            bool   `json:"is_end"`
+	ID           string `json:"id"`
+	Object       string `json:"object"`
+	Created      int64  `json:"created"`
+	SentenceId   int64  `json:"sentence_id"`
+	IsEnd        bool   `json:"is_end"`
+	IsTruncated  bool   `json:"is_truncated"`
+	FinishReason string `json:"finish_reason"`
+	SearchInfo   []struct {
+		Index int    `json:"index"`
+		URL   string `json:"url"`
+		Title string `json:"title"`
+	} `json:"search_info"`
 	Result           string `json:"result"`
 	NeedClearHistory bool   `json:"need_clear_history"`
 	Usage            Usage  `json:"usage"`
+	Flag             int    `json:"flag"`
+	BanRound         int    `json:"ban_round"`
 	ErrorCode        int    `json:"error_code"`
 	ErrorMsg         string `json:"error_msg"`
 }

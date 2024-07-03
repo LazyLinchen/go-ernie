@@ -3,27 +3,23 @@ package go_ernie
 import (
 	"bufio"
 	"bytes"
-	"fmt"
+	"context"
 	erinie "github.com/LazyLinchen/go-ernie/internal"
 	"io"
 	"net/http"
 )
 
-var (
-	headerData  = []byte("data: ")
-	errorSuffix = []byte(`"error_msg"`)
-)
-
 type streamable interface {
-	ChatCompletionStreamResponse
+	ChatCompletionStreamResponse | CompletionStreamResponse
 }
 
 type streamReader[T streamable] struct {
 	emptyMessagesLimit uint
 	isFinished         bool
 
-	reader         *bufio.Reader
+	scanner        *bufio.Scanner
 	response       *http.Response
+	ctx            context.Context
 	errAccumulator erinie.ErrorAccumulator
 	unmarshaler    erinie.Unmarshaler
 }
@@ -38,53 +34,37 @@ func (stream *streamReader[T]) Recv() (response T, err error) {
 }
 
 func (stream *streamReader[T]) processLines() (T, error) {
-	var (
-		emptyMessagesCount uint
-		hasErrorSuffix     bool
-	)
-
-	for {
-		rawLine, readErr := stream.reader.ReadBytes('\n')
-		if readErr != nil || hasErrorSuffix {
-			respErr := stream.unmarshalError()
-			if respErr != nil {
-				return *new(T), fmt.Errorf("error, %w", respErr.Error)
-			}
-			return *new(T), readErr
-		}
-
-		noSpaceLine := bytes.TrimSpace(rawLine)
-		if bytes.HasSuffix(noSpaceLine, errorSuffix) {
-			hasErrorSuffix = true
-		}
-		if !bytes.HasPrefix(noSpaceLine, headerData) || hasErrorSuffix {
-			if hasErrorSuffix {
-				noSpaceLine = bytes.TrimPrefix(noSpaceLine, headerData)
-			}
-			writeErr := stream.errAccumulator.Write(noSpaceLine)
-			if writeErr != nil {
-				return *new(T), writeErr
-			}
-			emptyMessagesCount++
-			if emptyMessagesCount > stream.emptyMessagesLimit {
-				return *new(T), ErrTooManyEmptyStreamMessages
-			}
-
-			continue
-		}
-		noPrefixLine := bytes.TrimPrefix(noSpaceLine, headerData)
-		if string(noPrefixLine) == "[DONE]" {
-			stream.isFinished = true
-			return *new(T), io.EOF
-		}
-
-		var response T
-		unmarshalErr := stream.unmarshaler.Unmarshal(noPrefixLine, &response)
-		if unmarshalErr != nil {
-			return *new(T), unmarshalErr
-		}
-		return response, nil
+	var eventData []byte
+	if stream.scanner == nil {
+		stream.scanner = bufio.NewScanner(stream.response.Body)
 	}
+	for len(eventData) == 0 {
+		for {
+			if !stream.scanner.Scan() {
+				stream.isFinished = true
+				stream.Close()
+				return *new(T), stream.scanner.Err()
+			}
+			line := stream.scanner.Bytes()
+			if len(line) == 0 {
+				break
+			}
+			var value []byte
+			if i := bytes.IndexRune(line, ':'); i != -1 {
+				value = line[i+1:]
+				if len(value) != 0 && value[0] == ' ' {
+					value = value[1:]
+				}
+			}
+			eventData = append(eventData, value...)
+		}
+	}
+	var response T
+	err := stream.unmarshaler.Unmarshal(eventData, &response)
+	if err != nil {
+		return *new(T), err
+	}
+	return response, nil
 }
 
 func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
@@ -100,5 +80,5 @@ func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 }
 
 func (stream *streamReader[T]) Close() {
-	stream.response.Body.Close()
+	_ = stream.response.Body.Close()
 }
